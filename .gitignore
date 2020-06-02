@@ -1,0 +1,13 @@
+td_proj/simulation
+*.area
+*.db
+*.bid
+*.timing
+*.tsm
+*.bit
+*.log
+*.mif
+*.bin
+*.elf
+*.map
+rom2mif
