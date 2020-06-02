@@ -10,4 +10,5 @@ td_proj/simulation
 *.bin
 *.elf
 *.map
+*.bak
 rom2mif

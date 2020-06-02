@@ -11,9 +11,9 @@
 ### USER_mosi P59
 
 ## RGB LED
-### LED_R P23
-### LED_G P19
-### LED_B P17
+### LED_B P19
+### LED_G P23
+### LED_R P17
 
 ## User Button
 ### Button A P16

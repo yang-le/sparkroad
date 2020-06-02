@@ -109,7 +109,7 @@ void main()
 {
 	char input_entry[32] = {0};
 	unsigned int num_cycles, num_instr;
-	volatile int i = 0; //输入指针
+	int i = 0; //输入指针
 	char a = 0;
 
 	UART_BSRR = 69; //24M晶振，波特率115200
@@ -123,31 +123,34 @@ void main()
 	//}
 	while(1)
 	{
+		i = 0;
 		puts("console> ");
-		while(a != '\r')
+		while((a = getc()) != '\r')
 		{ /* 处理输入 */
-			a = getc();
 			putc(a);
 
-			if(a == '\r')
-				putc('\n');
+			if ((a == '\b') || (a == 0x7F)) {
+				--i;
+				if (i < 0) i = 0;
+				input_entry[i] = 0;
+				continue;
+			}
 
-			input_entry[i] = (a == '\r')? 0: a;
+			input_entry[i++] = a;
 
-			i++;
 			if(i >= 32)
 			{
+				i = 0;
 				puts("\r\nYou 've entered too many characters!\r\nconsole> ");
-				i = 0;
-				input_entry[0] = 0;
 			}
-			if(a == '\r')
-				i = 0;
 		}
 
-		a = 0;
+		puts("\r\n");
+		input_entry[i] = 0;
+
 		if(input_entry[0] == 0)
 			continue;
+
 		if(memcmp(input_entry, "help", 4) || input_entry[0] == '?')
 		{
 			print_version();
@@ -195,5 +198,4 @@ void main()
 		puts(input_entry);
 		puts(" is not a specific command!\r\n");
 	}
-;
 }
