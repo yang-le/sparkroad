@@ -21,46 +21,58 @@ char getc()
 
 void puts(const char *s)
 {
-	volatile int j;
 	while (*s)
-	{
 		putc(*s++);
-	}
-}
-
-void *memcpy(void *dest, const void *src, int n)
-{
-	while (n)
-	{
-		n--;
-		((char*)dest)[n] = ((char*)src)[n];
-	}
-	return dest;
-}
-
-char memcmp(void *s1, void *s2, int n)
-{
-	int i;
-	for(i = 0; i < n; i++)
-	{
-		if(((char*)s1)[i] != ((char*)s2)[i])
-			return 0;
-	}
-	return 1;
-}
-
-void print_version()
-{
-	puts("\r\nPicoRV32 (RV32I ISA) running on SparkRoad(EG4S20NG88)\r\n");
 }
 
 void printhex(char i)
 {
-	char table[]="0123456789ABCDEF";
+	const char table[]="0123456789ABCDEF";
 
 	putc(table[i >> 4]);
 	putc(table[i & 0x0f]);
 }
+
+/*void* memset(void *ptr, int value, size_t num)
+{
+	char *p = (char*)ptr;
+	while(num--)
+		*p++ = value;
+
+	return ptr;	
+}*/
+
+void printdec(unsigned long long l)
+{
+	int i = 0;
+	char dec[19] = {0};
+
+	while(l) {
+		dec[i++] = (l % 10) + '0';
+		l /= 10;
+	}
+
+	while(i)
+		putc(dec[--i]);
+}
+
+void printhword(unsigned short s)
+{
+	printhex(s >> 8);
+	printhex(s);
+}
+
+void printword(unsigned int i)
+{
+	printhword(i >> 16);
+	printhword(i);
+}
+
+/*void printdword(unsigned long long l)
+{
+	printword(l >> 32);
+	printword(l);
+}*/
 
 void printcrlf()
 {
@@ -68,34 +80,72 @@ void printcrlf()
 	putc('\n');
 }
 
+void *memcpy(void *dest, const void *src, int n)
+{
+	while (n--)
+		((char*)dest)[n] = ((char*)src)[n];
+
+	return dest;
+}
+
+char memcmp(const void *s1, const void *s2, int n)
+{
+	for(int i = 0; i < n; i++)
+		if(((char*)s1)[i] != ((char*)s2)[i])
+			return 0;
+
+	return 1;
+}
+
+int strlen(const char *s)
+{
+	int i = 0;
+	while(*s++) ++i;
+	return i;
+}
+
+char* strcpy(char *dest, const char *src)
+{
+	while (*src)
+		*dest++ = *src++;
+
+	return dest;
+}
+
+char strcmp(const char *s1, const char *s2)
+{
+	while(*s1 || *s2)
+		if (*s1++ != *s2++)
+			return 0;
+
+	return 1;
+}
+
+void print_version()
+{
+	puts("\r\nPicoRV32 (RV32IMC ISA) running on SparkRoad(EG4S20NG88)\r\n");
+}
+
 void dump_memory(int address, int size)
 {
-	int i, j;
 	char *dat = (char *)address;
 	int disp_address;
 	puts("Dump memory from 0x");
-	printhex(disp_address >> 24);
-	printhex(disp_address >> 16);
-	printhex(disp_address >> 8);
-	printhex(disp_address & 0xff);
+	printword(disp_address);
 	puts(" size: 0x");
-	printhex(size >> 8);
-	printhex(size & 0xff);
+	printword(size);
 	printcrlf();
-	for(i = 0; i < size / 16; i++)
+	for(int i = 0; i < size / 16; i++)
 	{
 		disp_address = address + i * 16;
 		printcrlf();
-		printhex(disp_address >> 24);
-		printhex(disp_address >> 16);
-		printhex(disp_address >> 8);
-		printhex(disp_address & 0xff);
+		printword(disp_address);
 		putc(' ');
-		for (j = 0; j < 16; ++j) {
+		for (int j = 0; j < 16; ++j) {
 			printhex(dat[i * 16 + j]);
 			putc(' ');
 		}
-		for (j = 0; j < 16; ++j) {
+		for (int j = 0; j < 16; ++j) {
 			char c = dat[i * 16 + j];
 			if ((0x20 <= c) && (c <= 0x7E))
 				putc(c);
@@ -151,11 +201,11 @@ void main()
 		if(input_entry[0] == 0)
 			continue;
 
-		if(memcmp(input_entry, "help", 4) || input_entry[0] == '?')
+		if(strcmp(input_entry, "help") || strcmp(input_entry, "?"))
 		{
 			print_version();
 			puts("help - display this message\r\n");
-			puts("d - dump memory from 0 to 4096\r\n");
+			puts("dump - dump memory from 0 to 8192\r\n");
 			puts("sd - detect spi flash, dump model\r\n");
 			puts("uptime - display system clock ticks\r\n");
 			puts("exit - executes EBREAK to end the loop\r\n");
@@ -167,29 +217,56 @@ void main()
 			GPIO_A_ODR = GPIO_RGB(input_entry[5] - '0');
 			continue;
 		}
-		if(memcmp(input_entry, "d", 1))
+		if(strcmp(input_entry, "dump"))
 		{
-			dump_memory(0x00000000, 4096);
+			dump_memory(0x00000000, 8192);
 			printcrlf();
 			continue;
 		}
-		if(memcmp(input_entry, "uptime", 6))
+		if(strcmp(input_entry, "uptime"))
 		{
-			__asm__("rdcycle %0; rdinstret %1;" : "=r"(num_cycles), "=r"(num_instr));
+			unsigned int lo, hi, tmp;
+
+			__asm__ __volatile__ (
+			"1:\n"
+			"rdcycleh %0\n"
+			"rdcycle %1\n"
+			"rdcycleh %2\n"
+			"bne %0, %2, 1b"
+			: "=&r" (hi), "=&r" (lo), "=&r" (tmp));
+
 			puts("System cycle counter: 0x");
-			printhex(num_cycles >> 24);
-			printhex(num_cycles >> 16);
-			printhex(num_cycles >> 8);
-			printhex(num_cycles & 0xff);
+			printword(hi);
+			printword(lo);
+
+			__asm__ __volatile__ (
+			"1:\n"
+			"rdtimeh %0\n"
+			"rdtime %1\n"
+			"rdtimeh %2\n"
+			"bne %0, %2, 1b"
+			: "=&r" (hi), "=&r" (lo), "=&r" (tmp));
+
+			unsigned long long time = (((unsigned long long)hi << 32) | lo) * 4167 / 100000000;
+			puts("\r\nSystem up time: ");
+			printdec(time);
+			puts(" ms");
+
+			__asm__ __volatile__ (
+			"1:\n"
+			"rdinstreth %0\n"
+			"rdinstret %1\n"
+			"rdinstreth %2\n"
+			"bne %0, %2, 1b"
+			: "=&r" (hi), "=&r" (lo), "=&r" (tmp));
+
 			puts("\r\nSystem instruction counter: 0x");	;
-			printhex(num_instr >> 24);
-			printhex(num_instr >> 16);
-			printhex(num_instr >> 8);
-			printhex(num_instr & 0xff);
+			printword(hi);
+			printword(lo);
 			printcrlf();
 			continue;
 		}
-		if(memcmp(input_entry, "exit", 4))
+		if(strcmp(input_entry, "exit"))
 		{
 			puts("exit the main loop\r\n");
 			break;

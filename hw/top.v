@@ -32,7 +32,11 @@ module system (
 		resetn <= resetn_i;
 	end
 	
-	picorv32 picorv32_core (
+	picorv32 #(
+		.COMPRESSED_ISA	(1),
+		.ENABLE_MUL		(1),
+		.ENABLE_DIV		(1)
+	) picorv32_core (
 		.clk         (clk         ),
 		.resetn      (resetn      ),
 		.trap        (trap        ),
@@ -56,32 +60,28 @@ module system (
 	/* system memory, you can also use AXI-wrapper here */
 	sysmem_lo mem_lo  (.doa(memory_out[7:0]),
 			.dia(mem_la_wdata[7:0]), 
-			.addra(mem_la_addr[11:2]),
+			.addra(mem_la_addr[12:2]),
 			.cea(1'b1), 
 			.clka(clk), 
-			.wea(mem_la_wstrb[0] && mem_la_write && mem_la_addr[31:12] == 20'b0), 
-			.rsta(~resetn));
+			.wea(mem_la_wstrb[0] && mem_la_write && mem_la_addr[31:13] == 20'b0));
 	sysmem_ml mem_ml  (.doa(memory_out[15:8]),
 			.dia(mem_la_wdata[15:8]), 
-			.addra(mem_la_addr[11:2]),
+			.addra(mem_la_addr[12:2]),
 			.cea(1'b1), 
 			.clka(clk), 
-			.wea(mem_la_wstrb[1] && mem_la_write && mem_la_addr[31:12] == 20'b0), 
-			.rsta(~resetn));
+			.wea(mem_la_wstrb[1] && mem_la_write && mem_la_addr[31:13] == 20'b0));
 	sysmem_mh mem_mh  (.doa(memory_out[23:16]),
 			.dia(mem_la_wdata[23:16]), 
-			.addra(mem_la_addr[11:2]),
+			.addra(mem_la_addr[12:2]),
 			.cea(1'b1), 
 			.clka(clk), 
-			.wea(mem_la_wstrb[2] && mem_la_write && mem_la_addr[31:12] == 20'b0), 
-			.rsta(~resetn));
+			.wea(mem_la_wstrb[2] && mem_la_write && mem_la_addr[31:13] == 20'b0));
 	sysmem_hi mem_hi  (.doa(memory_out[31:24]),
 			.dia(mem_la_wdata[31:24]), 
-			.addra(mem_la_addr[11:2]),
+			.addra(mem_la_addr[12:2]),
 			.cea(1'b1), 
 			.clka(clk), 
-			.wea(mem_la_wstrb[3] && mem_la_write && mem_la_addr[31:12] == 20'b0), 
-			.rsta(~resetn));
+			.wea(mem_la_wstrb[3] && mem_la_write && mem_la_addr[31:13] == 20'b0));
 	
 	wire uart_sel = (mem_la_addr[31:4] == 28'h1000_001);		
 	wire [31:0]uart_do;

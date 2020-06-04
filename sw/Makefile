@@ -3,8 +3,8 @@ lo.mif: rom2mif firmware.bin
 	cp *.mif ../td_proj/al_ip
 
 firmware.elf: firmware.S firmware.c firmware.lds
-	riscv64-unknown-elf-gcc -ffreestanding -nostdlib -o firmware.elf firmware.S firmware.c \
-        -march=rv32i -mabi=ilp32 --std=gnu99 -Wl,-Bstatic,-T,firmware.lds,-Map,firmware.map,--strip-debug -lgcc
+	riscv64-unknown-elf-gcc -ffreestanding -nostdlib -O -o firmware.elf firmware.S firmware.c \
+        -march=rv32imc -mabi=ilp32 --std=gnu99 -Wl,-Bstatic,-T,firmware.lds,-Map,firmware.map,--strip-debug -lgcc
 
 firmware.bin: firmware.elf
 	riscv64-unknown-elf-objcopy -O binary firmware.elf firmware.bin

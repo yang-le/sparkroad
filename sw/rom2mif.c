@@ -27,22 +27,22 @@ int main(int argc, char* argv[])
 	printf("MIF files %s %s %s %s\r\n", argv[2], argv[3], argv[4], argv[5]);
 	uint8_t dat[4];
 	int i = 0;
-	fprintf(fp1, "DEPTH = 1024;\nWIDTH = 8;\n"
+	fprintf(fp1, "DEPTH = 2048;\nWIDTH = 8;\n"
 				 "ADDRESS_RADIX = HEX;\n"
 				 "DATA_RADIX = HEX;\n"
 				 "CONTENT "
 				 "BEGIN\n \n");
-	fprintf(fp2, "DEPTH = 1024;\nWIDTH = 8;\n"
+	fprintf(fp2, "DEPTH = 2048;\nWIDTH = 8;\n"
 				 "ADDRESS_RADIX = HEX;\n"
 				 "DATA_RADIX = HEX;\n"
 				 "CONTENT "
 				 "BEGIN\n \n");
-	fprintf(fp3, "DEPTH = 1024;\nWIDTH = 8;\n"
+	fprintf(fp3, "DEPTH = 2048;\nWIDTH = 8;\n"
 				 "ADDRESS_RADIX = HEX;\n"
 				 "DATA_RADIX = HEX;\n"
 				 "CONTENT "
 				 "BEGIN\n \n");
-	fprintf(fp4, "DEPTH = 1024;\nWIDTH = 8;\n"
+	fprintf(fp4, "DEPTH = 2048;\nWIDTH = 8;\n"
 				 "ADDRESS_RADIX = HEX;\n"
 				 "DATA_RADIX = HEX;\n"
 				 "CONTENT "
